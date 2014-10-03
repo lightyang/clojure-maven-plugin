@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 
 import static org.apache.commons.io.IOUtils.copy;
 
@@ -44,6 +45,9 @@ public class ClojureRunTestWithJUnitMojo extends AbstractClojureCompilerMojo {
    */
   @Parameter(required = true, property = "skipTests", defaultValue = "false")
   private boolean skipTests;
+
+  @Parameter(required = true, property = "test", defaultValue = ".*")
+  private String test;
 
   /**
    * The main clojure script to run
@@ -90,7 +94,14 @@ public class ClojureRunTestWithJUnitMojo extends AbstractClojureCompilerMojo {
             testFile.deleteOnExit();
             final PrintWriter writer = new PrintWriter(new FileWriter(testFile));
 
-            generateTestScript(writer, ns);
+            ArrayList<NamespaceInFile> nsMatched = new ArrayList<NamespaceInFile>();
+            for (NamespaceInFile n : ns) {
+              if (n.getName().matches(test)) {
+                nsMatched.add(n);
+              }
+            }
+
+            generateTestScript(writer, nsMatched.toArray(new NamespaceInFile[nsMatched.size()]));
 
             writer.close();
 
